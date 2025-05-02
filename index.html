@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Поиск объекта</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    .card { background: white; padding: 15px; margin-top: 10px; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="auth" class="card">
+    <h3>Авторизация</h3>
+    <input type="text" id="login" placeholder="Логин" />
+    <input type="password" id="passwordLogin" placeholder="Пароль" />
+    <button onclick="authenticate()">Войти</button>
+  </div>
+
+  <div id="mainApp" class="hidden">
+    <h2>Поиск объекта по коду</h2>
+    <input type="text" id="codeInput" placeholder="Введите код объекта" />
+    <button onclick="searchObject()">Поиск</button>
+
+    <div id="result" class="card hidden"></div>
+    <div id="notFound" class="card hidden">
+      <p>Объект не найден.</p>
+      <button onclick="showAddForm()">Добавить объект</button>
+      <button onclick="goBack()">Назад</button>
+    </div>
+
+    <div id="addForm" class="card hidden">
+      <h3 id="formTitle">Добавить объект</h3>
+      <input type="text" id="name" placeholder="Название" />
+      <input type="text" id="address" placeholder="Адрес" />
+      <input type="text" id="devices" placeholder="Устройства" />
+      <input type="text" id="serials" placeholder="Серийники" />
+      <input type="text" id="password" placeholder="Пароль" />
+      <input type="text" id="graphicalPassword" placeholder="Граф. пароль (необязательно)" />
+      <input type="text" id="passwordType" placeholder="Тип пароля (текст, графический, оба)" />
+      <button onclick="submitObject()">Сохранить</button>
+      <button onclick="goBack()">Назад</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://sheetdb.io/api/v1/21tdg9l5kzdpu'; // Замените на ваш ID
+    const USERS_URL = 'https://sheetdb.io/api/v1/21tdg9l5kzdpu'; // Отдельный лист с логинами
+    let isEditMode = false;
+    let currentCode = '';
+    let currentUser = null;
+
+    function authenticate() {
+      const login = document.getElementById('login').value;
+      const password = document.getElementById('passwordLogin').value;
+
+      fetch(`${USERS_URL}/search?login=${login}&password=${password}`)
+        .then(res => res.json())
+        .then(users => {
+          if (users.length > 0) {
+            currentUser = users[0];
+            document.getElementById('auth').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+          } else {
+            alert('Неверный логин или пароль');
+          }
+        });
+    }
+
+    function searchObject(codeOverride = null) {
+      const code = codeOverride || document.getElementById('codeInput').value;
+      currentCode = code;
+      fetch(`${API_URL}/search?code=${code}`)
+        .then(res => res.json())
+        .then(data => {
+          const result = document.getElementById('result');
+          const notFound = document.getElementById('notFound');
+          const addForm = document.getElementById('addForm');
+          if (data.length > 0) {
+            const obj = data[0];
+            result.innerHTML = `<strong>${obj.name}</strong><br>Адрес: ${obj.address}<br>Устройства: ${obj.devices}<br>Серийники: ${obj.serials}<br>Пароль: ${obj.password}<br>Граф. пароль: ${obj.graphical_password || '-'}<br>Добавлен: ${obj.date_added} (${obj.created_by})<br>Изменён: ${obj.date_modified} (${obj.modified_by})<br><br><button onclick='editObject(${JSON.stringify(obj)})'>Редактировать</button><br><br><button onclick='goBack()'>Назад</button>`;
+            result.classList.remove('hidden');
+            notFound.classList.add('hidden');
+            addForm.classList.add('hidden');
+          } else {
+            result.classList.add('hidden');
+            notFound.classList.remove('hidden');
+          }
+        });
+    }
+
+    function showAddForm() {
+      isEditMode = false;
+      document.getElementById('formTitle').innerText = 'Добавить объект';
+      document.getElementById('addForm').classList.remove('hidden');
+      document.getElementById('result').classList.add('hidden');
+      document.getElementById('notFound').classList.add('hidden');
+      clearForm();
+    }
+
+    function editObject(obj) {
+      isEditMode = true;
+      document.getElementById('formTitle').innerText = 'Редактировать объект';
+      document.getElementById('name').value = obj.name;
+      document.getElementById('address').value = obj.address;
+      document.getElementById('devices').value = obj.devices;
+      document.getElementById('serials').value = obj.serials;
+      document.getElementById('password').value = obj.password;
+      document.getElementById('graphicalPassword').value = obj.graphical_password;
+      document.getElementById('passwordType').value = obj.password_type;
+      document.getElementById('addForm').classList.remove('hidden');
+      document.getElementById('result').classList.add('hidden');
+    }
+
+    function clearForm() {
+      ['name','address','devices','serials','password','graphicalPassword','passwordType'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+    }
+
+    function submitObject() {
+      const data = {
+        code: currentCode,
+        name: document.getElementById('name').value,
+        address: document.getElementById('address').value,
+        devices: document.getElementById('devices').value,
+        serials: document.getElementById('serials').value,
+        password: document.getElementById('password').value,
+        graphical_password: document.getElementById('graphicalPassword').value,
+        password_type: document.getElementById('passwordType').value,
+        date_modified: new Date().toISOString().slice(0,10),
+        modified_by: currentUser.name
+      };
+
+      if (!isEditMode) {
+        data.date_added = data.date_modified;
+        data.created_by = currentUser.name;
+        fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data })
+        })
+        .then(res => res.json())
+        .then(() => {
+          alert('Объект добавлен');
+          searchObject(currentCode);
+        });
+      } else {
+        fetch(`${API_URL}/code/${currentCode}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data })
+        })
+        .then(res => res.json())
+        .then(() => {
+          alert('Объект обновлён');
+          searchObject(currentCode);
+        });
+      }
+    }
+
+    function goBack() {
+      document.getElementById('result').classList.add('hidden');
+      document.getElementById('notFound').classList.add('hidden');
+      document.getElementById('addForm').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
