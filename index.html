@@ -45,137 +45,146 @@
     </div>
   </div>
 
-  <script>
-    const API_URL = 'https://sheetdb.io/api/v1/y9ubonn86lvn7';
-    const USERS_URL = 'https://sheetdb.io/api/v1/21tdg9l5kzdpu';
+<script>
+  const API_URL = 'https://sheetdb.io/api/v1/y9ubonn86lvn7';
+  const USERS_URL = 'https://sheetdb.io/api/v1/21tdg9l5kzdpu';
 
-    let currentUser = null;
-    let currentObject = null;
+  let currentUser = null;
+  let currentObject = null;
 
-    function authenticate() {
-      const login = document.getElementById('login').value;
-      const password = document.getElementById('password').value;
+  function getFormattedDate() {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${year}-${month}-${day}`;
+  }
 
-      fetch(`${USERS_URL}/search?login=${login}&password=${password}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.length > 0) {
-            currentUser = data[0];
-            document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('mainSection').classList.remove('hidden');
-            document.getElementById('welcomeMessage').textContent = `Добро пожаловать, ${currentUser.name}`;
-          } else {
-            alert('Неверный логин или пароль');
-          }
-        });
-    }
+  function authenticate() {
+    const login = document.getElementById('login').value;
+    const password = document.getElementById('password').value;
 
-    function logout() {
-      currentUser = null;
-      document.getElementById('authSection').classList.remove('hidden');
-      document.getElementById('mainSection').classList.add('hidden');
-      document.getElementById('result').classList.add('hidden');
-      document.getElementById('notFound').classList.add('hidden');
-      document.getElementById('addForm').classList.add('hidden');
-      document.getElementById('codeInput').value = '';
-    }
-
-    function searchObject() {
-      const code = document.getElementById('codeInput').value.trim();
-      fetch(`${API_URL}/search?code=${code}`)
-        .then(res => res.json())
-        .then(data => {
-          const result = document.getElementById('result');
-          const notFound = document.getElementById('notFound');
-          const addForm = document.getElementById('addForm');
-
-          if (data.length > 0) {
-            currentObject = data[0];
-            result.innerHTML = `
-              <strong>${currentObject.name}</strong><br>
-              Адрес: ${currentObject.address}<br>
-              Устройства: ${currentObject.devices}<br>
-              Серийники: ${currentObject.serials}<br>
-              Пароль: ${currentObject.password}<br>
-              Граф. пароль: ${currentObject.graphical_password || '-'}<br>
-              Добавлен: ${currentObject.date_added} (${currentObject.created_by})<br>
-              Изменён: ${currentObject.date_modified} (${currentObject.modified_by})<br>
-              <button onclick="editObject()">Редактировать</button>
-              ${currentUser.role === 'admin' ? '<button onclick="deleteObject(\'' + currentObject.code + '\')">Удалить объект</button>' : ''}`;
-            result.classList.remove('hidden');
-            notFound.classList.add('hidden');
-            addForm.classList.add('hidden');
-          } else {
-            result.classList.add('hidden');
-            notFound.classList.remove('hidden');
-          }
-        });
-    }
-
-    function showAddForm() {
-      if (!currentUser) return;
-      document.getElementById('addForm').classList.remove('hidden');
-    }
-
-    function editObject() {
-      if (!currentObject) return;
-      document.getElementById('name').value = currentObject.name;
-      document.getElementById('address').value = currentObject.address;
-      document.getElementById('devices').value = currentObject.devices;
-      document.getElementById('serials').value = currentObject.serials;
-      document.getElementById('passwordObj').value = currentObject.password;
-      document.getElementById('graphicalPassword').value = currentObject.graphical_password;
-      document.getElementById('passwordType').value = currentObject.password_type;
-      document.getElementById('addForm').classList.remove('hidden');
-    }
-
-    function addObject() {
-      const code = document.getElementById('codeInput').value.trim();
-      const now = new Date().toISOString().slice(0,10);
-
-      fetch(`${API_URL}/search?code=${code}`)
-        .then(res => res.json())
-        .then(data => {
-          const isUpdate = data.length > 0;
-          const dataToSend = {
-            code,
-            name: document.getElementById('name').value,
-            address: document.getElementById('address').value,
-            devices: document.getElementById('devices').value,
-            serials: document.getElementById('serials').value,
-            password: document.getElementById('passwordObj').value,
-            graphical_password: document.getElementById('graphicalPassword').value,
-            password_type: document.getElementById('passwordType').value,
-            date_modified: now,
-            modified_by: currentUser.name
-          };
-
-          if (!isUpdate) {
-            dataToSend.date_added = now;
-            dataToSend.created_by = currentUser.name;
-          }
-
-          fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: dataToSend })
-          })
-          .then(res => res.json())
-          .then(() => alert(isUpdate ? 'Объект обновлён' : 'Объект добавлен'));
-        });
-    }
-
-    function deleteObject(code) {
-      if (!confirm('Удалить объект?')) return;
-      fetch(`${API_URL}/code/${code}`, {
-        method: 'DELETE'
-      })
+    fetch(`${USERS_URL}/search?login=${login}&password=${password}`)
       .then(res => res.json())
-      .then(() => {
-        alert('Объект удалён');
-        document.getElementById('result').classList.add('hidden');
+      .then(data => {
+        if (data.length > 0) {
+          currentUser = data[0];
+          document.getElementById('authSection').classList.add('hidden');
+          document.getElementById('mainSection').classList.remove('hidden');
+          document.getElementById('welcomeMessage').textContent = `Добро пожаловать, ${currentUser.name}`;
+        } else {
+          alert('Неверный логин или пароль');
+        }
       });
-    }
-  </script>
+  }
+
+  function logout() {
+    currentUser = null;
+    currentObject = null;
+    document.getElementById('authSection').classList.remove('hidden');
+    document.getElementById('mainSection').classList.add('hidden');
+    document.getElementById('result').classList.add('hidden');
+    document.getElementById('notFound').classList.add('hidden');
+    document.getElementById('addForm').classList.add('hidden');
+    document.getElementById('codeInput').value = '';
+  }
+
+  function searchObject() {
+    const code = document.getElementById('codeInput').value.trim();
+    fetch(`${API_URL}/search?code=${code}`)
+      .then(res => res.json())
+      .then(data => {
+        const result = document.getElementById('result');
+        const notFound = document.getElementById('notFound');
+        const addForm = document.getElementById('addForm');
+
+        if (data.length > 0) {
+          currentObject = data[0];
+          result.innerHTML = `
+            <strong>${currentObject.name}</strong><br>
+            Адрес: ${currentObject.address}<br>
+            Устройства: ${currentObject.devices}<br>
+            Серийники: ${currentObject.serials}<br>
+            Пароль: ${currentObject.password}<br>
+            Граф. пароль: ${currentObject.graphical_password || '-'}<br>
+            Добавлен: ${currentObject.date_added} (${currentObject.created_by})<br>
+            Изменён: ${currentObject.date_modified} (${currentObject.modified_by})<br>
+            <button onclick="editObject()">Редактировать</button>
+            ${currentUser.role === 'admin' ? '<button onclick="deleteObject(\'' + currentObject.code + '\')">Удалить объект</button>' : ''}`;
+          result.classList.remove('hidden');
+          notFound.classList.add('hidden');
+          addForm.classList.add('hidden');
+        } else {
+          result.classList.add('hidden');
+          notFound.classList.remove('hidden');
+        }
+      });
+  }
+
+  function showAddForm() {
+    if (!currentUser) return;
+    document.getElementById('addForm').classList.remove('hidden');
+  }
+
+  function editObject() {
+    if (!currentObject) return;
+    document.getElementById('name').value = currentObject.name;
+    document.getElementById('address').value = currentObject.address;
+    document.getElementById('devices').value = currentObject.devices;
+    document.getElementById('serials').value = currentObject.serials;
+    document.getElementById('passwordObj').value = currentObject.password;
+    document.getElementById('graphicalPassword').value = currentObject.graphical_password;
+    document.getElementById('passwordType').value = currentObject.password_type;
+    document.getElementById('addForm').classList.remove('hidden');
+  }
+
+  function addObject() {
+    const code = document.getElementById('codeInput').value.trim();
+    const now = getFormattedDate();
+
+    fetch(`${API_URL}/search?code=${code}`)
+      .then(res => res.json())
+      .then(data => {
+        const isUpdate = data.length > 0;
+        const dataToSend = {
+          code,
+          name: document.getElementById('name').value,
+          address: document.getElementById('address').value,
+          devices: document.getElementById('devices').value,
+          serials: document.getElementById('serials').value,
+          password: document.getElementById('passwordObj').value,
+          graphical_password: document.getElementById('graphicalPassword').value,
+          password_type: document.getElementById('passwordType').value,
+          date_modified: now,
+          modified_by: currentUser.name
+        };
+
+        if (!isUpdate) {
+          dataToSend.date_added = now;
+          dataToSend.created_by = currentUser.name;
+        }
+
+        fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: dataToSend })
+        })
+        .then(res => res.json())
+        .then(() => alert(isUpdate ? 'Объект обновлён' : 'Объект добавлен'));
+      });
+  }
+
+  function deleteObject(code) {
+    if (!confirm('Удалить объект?')) return;
+    fetch(`${API_URL}/code/${code}`, {
+      method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(() => {
+      alert('Объект удалён');
+      document.getElementById('result').classList.add('hidden');
+    });
+  }
+</script>
 </body>
 </html>
