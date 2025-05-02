@@ -52,18 +52,26 @@
     let currentUser = null;
     let currentObject = null;
 
+    function getFormattedDate() {
+      const d = new Date();
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${year}-${month}-${day}`;
+    }
+
     function authenticate() {
       const login = document.getElementById('login').value;
       const password = document.getElementById('password').value;
 
-      fetch(${USERS_URL}/search?login=${login}&password=${password})
+      fetch(`${USERS_URL}/search?login=${login}&password=${password}`)
         .then(res => res.json())
         .then(data => {
           if (data.length > 0) {
             currentUser = data[0];
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('mainSection').classList.remove('hidden');
-            document.getElementById('welcomeMessage').textContent = Добро пожаловать, ${currentUser.name};
+            document.getElementById('welcomeMessage').textContent = `Добро пожаловать, ${currentUser.name}`;
           } else {
             alert('Неверный логин или пароль');
           }
@@ -72,6 +80,7 @@
 
     function logout() {
       currentUser = null;
+      currentObject = null;
       document.getElementById('authSection').classList.remove('hidden');
       document.getElementById('mainSection').classList.add('hidden');
       document.getElementById('result').classList.add('hidden');
@@ -82,7 +91,7 @@
 
     function searchObject() {
       const code = document.getElementById('codeInput').value.trim();
-      fetch(${API_URL}/search?code=${code})
+      fetch(`${API_URL}/search?code=${code}`)
         .then(res => res.json())
         .then(data => {
           const result = document.getElementById('result');
@@ -91,7 +100,7 @@
 
           if (data.length > 0) {
             currentObject = data[0];
-            result.innerHTML = 
+            result.innerHTML = `
               <strong>${currentObject.name}</strong><br>
               Адрес: ${currentObject.address}<br>
               Устройства: ${currentObject.devices}<br>
@@ -101,7 +110,7 @@
               Добавлен: ${currentObject.date_added} (${currentObject.created_by})<br>
               Изменён: ${currentObject.date_modified} (${currentObject.modified_by})<br>
               <button onclick="editObject()">Редактировать</button>
-              ${currentUser.role === 'admin' ? '<button onclick="deleteObject(\'' + currentObject.code + '\')">Удалить объект</button>' : ''};
+              ${currentUser.role === 'admin' ? '<button onclick="deleteObject(\'' + currentObject.code + '\')">Удалить объект</button>' : ''}`;
             result.classList.remove('hidden');
             notFound.classList.add('hidden');
             addForm.classList.add('hidden');
@@ -131,9 +140,9 @@
 
     function addObject() {
       const code = document.getElementById('codeInput').value.trim();
-      const now = new Date().toISOString().slice(0,10);
+      const now = getFormattedDate();
 
-      fetch(${API_URL}/search?code=${code})
+      fetch(`${API_URL}/search?code=${code}`)
         .then(res => res.json())
         .then(data => {
           const isUpdate = data.length > 0;
@@ -167,7 +176,7 @@
 
     function deleteObject(code) {
       if (!confirm('Удалить объект?')) return;
-      fetch(${API_URL}/code/${code}, {
+      fetch(`${API_URL}/code/${code}`, {
         method: 'DELETE'
       })
       .then(res => res.json())
