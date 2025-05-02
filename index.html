@@ -21,7 +21,7 @@
   </div>
 
   <div id="mainSection" class="hidden">
-    <h2>Поиск объекта по коду</h2>
+    <h2 id="welcomeMessage"></h2>
     <input type="text" id="codeInput" placeholder="Введите код объекта" />
     <button onclick="searchObject()">Поиск</button>
     <button class="logout-btn" onclick="logout()">Выйти</button>
@@ -50,6 +50,7 @@
     const USERS_URL = 'https://sheetdb.io/api/v1/21tdg9l5kzdpu';
 
     let currentUser = null;
+    let currentObject = null;
 
     function authenticate() {
       const login = document.getElementById('login').value;
@@ -62,6 +63,7 @@
             currentUser = data[0];
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('mainSection').classList.remove('hidden');
+            document.getElementById('welcomeMessage').textContent = `Добро пожаловать, ${currentUser.name}`;
           } else {
             alert('Неверный логин или пароль');
           }
@@ -88,17 +90,18 @@
           const addForm = document.getElementById('addForm');
 
           if (data.length > 0) {
-            const obj = data[0];
+            currentObject = data[0];
             result.innerHTML = `
-              <strong>${obj.name}</strong><br>
-              Адрес: ${obj.address}<br>
-              Устройства: ${obj.devices}<br>
-              Серийники: ${obj.serials}<br>
-              Пароль: ${obj.password}<br>
-              Граф. пароль: ${obj.graphical_password || '-'}<br>
-              Добавлен: ${obj.date_added} (${obj.created_by})<br>
-              Изменён: ${obj.date_modified} (${obj.modified_by})
-              ${currentUser.role === 'admin' ? '<br><button onclick="deleteObject(\'' + obj.code + '\')">Удалить объект</button>' : ''}`;
+              <strong>${currentObject.name}</strong><br>
+              Адрес: ${currentObject.address}<br>
+              Устройства: ${currentObject.devices}<br>
+              Серийники: ${currentObject.serials}<br>
+              Пароль: ${currentObject.password}<br>
+              Граф. пароль: ${currentObject.graphical_password || '-'}<br>
+              Добавлен: ${currentObject.date_added} (${currentObject.created_by})<br>
+              Изменён: ${currentObject.date_modified} (${currentObject.modified_by})<br>
+              <button onclick="editObject()">Редактировать</button>
+              ${currentUser.role === 'admin' ? '<button onclick="deleteObject(\'' + currentObject.code + '\')">Удалить объект</button>' : ''}`;
             result.classList.remove('hidden');
             notFound.classList.add('hidden');
             addForm.classList.add('hidden');
@@ -111,6 +114,18 @@
 
     function showAddForm() {
       if (!currentUser) return;
+      document.getElementById('addForm').classList.remove('hidden');
+    }
+
+    function editObject() {
+      if (!currentObject) return;
+      document.getElementById('name').value = currentObject.name;
+      document.getElementById('address').value = currentObject.address;
+      document.getElementById('devices').value = currentObject.devices;
+      document.getElementById('serials').value = currentObject.serials;
+      document.getElementById('passwordObj').value = currentObject.password;
+      document.getElementById('graphicalPassword').value = currentObject.graphical_password;
+      document.getElementById('passwordType').value = currentObject.password_type;
       document.getElementById('addForm').classList.remove('hidden');
     }
 
