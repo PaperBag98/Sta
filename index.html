@@ -173,6 +173,7 @@
     });
   } else {
     // Создаём новый объект (POST)
+    currentObject = null; // ОБЯЗАТЕЛЬНО
     dataToSend.code = code;
     dataToSend.date_added = now;
     dataToSend.created_by = currentUser.name;
