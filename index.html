@@ -141,40 +141,52 @@
   }
 
   function addObject() {
-    const code = document.getElementById('codeInput').value.trim();
-    const now = getFormattedDate();
+  const code = document.getElementById('codeInput').value.trim();
+  const now = getFormattedDate();
 
-    fetch(`${API_URL}/search?code=${code}`)
-      .then(res => res.json())
-      .then(data => {
-        const isUpdate = data.length > 0;
-        const dataToSend = {
-          code,
-          name: document.getElementById('name').value,
-          address: document.getElementById('address').value,
-          devices: document.getElementById('devices').value,
-          serials: document.getElementById('serials').value,
-          password: document.getElementById('passwordObj').value,
-          graphical_password: document.getElementById('graphicalPassword').value,
-          password_type: document.getElementById('passwordType').value,
-          date_modified: now,
-          modified_by: currentUser.name
-        };
+  const dataToSend = {
+    name: document.getElementById('name').value,
+    address: document.getElementById('address').value,
+    devices: document.getElementById('devices').value,
+    serials: document.getElementById('serials').value,
+    password: document.getElementById('passwordObj').value,
+    graphical_password: document.getElementById('graphicalPassword').value,
+    password_type: document.getElementById('passwordType').value,
+    date_modified: now,
+    modified_by: currentUser.name
+  };
 
-        if (!isUpdate) {
-          dataToSend.date_added = now;
-          dataToSend.created_by = currentUser.name;
-        }
+  if (currentObject) {
+    // Обновляем существующий объект (PATCH)
+    fetch(`${API_URL}/code/${code}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: dataToSend })
+    })
+    .then(res => res.json())
+    .then(() => {
+      alert('Объект обновлён');
+      currentObject = null; // сброс текущего объекта
+      document.getElementById('addForm').classList.add('hidden');
+    });
+  } else {
+    // Создаём новый объект (POST)
+    dataToSend.code = code;
+    dataToSend.date_added = now;
+    dataToSend.created_by = currentUser.name;
 
-        fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: dataToSend })
-        })
-        .then(res => res.json())
-        .then(() => alert(isUpdate ? 'Объект обновлён' : 'Объект добавлен'));
-      });
+    fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: dataToSend })
+    })
+    .then(res => res.json())
+    .then(() => {
+      alert('Объект добавлен');
+      document.getElementById('addForm').classList.add('hidden');
+    });
   }
+}
 
   function deleteObject(code) {
     if (!confirm('Удалить объект?')) return;
