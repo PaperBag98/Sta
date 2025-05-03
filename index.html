@@ -69,6 +69,7 @@
       .then(data => {
         if (data.length > 0) {
           currentUser = data[0];
+          
           document.getElementById('authSection').classList.add('hidden');
           document.getElementById('mainSection').classList.remove('hidden');
           document.getElementById('welcomeMessage').textContent = `Добро пожаловать, ${currentUser.name}`;
@@ -81,6 +82,7 @@
   function logout() {
     currentUser = null;
     currentObject = null;
+    localStorage.removeItem('currentUser');
     document.getElementById('authSection').classList.remove('hidden');
     document.getElementById('mainSection').classList.add('hidden');
     document.getElementById('result').classList.add('hidden');
@@ -185,6 +187,16 @@
       document.getElementById('result').classList.add('hidden');
     });
   }
+  
+  window.addEventListener('DOMContentLoaded', () => {
+  const savedUser = localStorage.getItem('currentUser');
+  if (savedUser) {
+    currentUser = JSON.parse(savedUser);
+    document.getElementById('authSection').classList.add('hidden');
+    document.getElementById('mainSection').classList.remove('hidden');
+    document.getElementById('welcomeMessage').textContent = `Добро пожаловать, ${currentUser.name}`;
+  });
+}
 </script>
 </body>
 </html>
