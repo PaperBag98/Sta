@@ -192,13 +192,20 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data: dataToSend })
     })
-    .then(res => res.json())
     .then(() => {
-      alert('Объект добавлен');
-      document.getElementById('addForm').classList.add('hidden');
-    });
-  }
-}
+  alert('Объект добавлен');
+  currentObject = null;
+  document.getElementById('addForm').classList.add('hidden');
+
+  // Сброс полей формы
+  document.getElementById('name').value = '';
+  document.getElementById('address').value = '';
+  document.getElementById('devices').value = '';
+  document.getElementById('serials').value = '';
+  document.getElementById('passwordObj').value = '';
+  document.getElementById('graphicalPassword').value = '';
+  document.getElementById('passwordType').value = '';
+});
 
   function deleteObject(code) {
     if (!confirm('Удалить объект?')) return;
