@@ -157,6 +157,8 @@
   };
 
   if (currentObject) {
+    dataToSend.date_added = currentObject.date_added;
+    dataToSend.created_by = currentObject.created_by;
     // Обновляем существующий объект (PATCH)
     fetch(`${API_URL}/code/${code}`, {
       method: 'PATCH',
