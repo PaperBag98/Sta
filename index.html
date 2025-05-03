@@ -161,16 +161,24 @@
     dataToSend.date_added = currentObject.date_added;
     dataToSend.created_by = currentObject.created_by;
     // Обновляем существующий объект (PATCH)
-    fetch(`${API_URL}/code/${code}`, {
-      method: 'PATCH',
+    fetch(API_URL, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data: dataToSend })
     })
     .then(res => res.json())
     .then(() => {
-      alert('Объект обновлён');
-      currentObject = null; // сброс текущего объекта
+      alert('Объект добавлен');
+      currentObject = null; // <-- добавлено сюда
       document.getElementById('addForm').classList.add('hidden');
+      // Очистка полей формы (по желанию)
+      document.getElementById('name').value = '';
+      document.getElementById('address').value = '';
+      document.getElementById('devices').value = '';
+      document.getElementById('serials').value = '';
+      document.getElementById('passwordObj').value = '';
+      document.getElementById('graphicalPassword').value = '';
+      document.getElementById('passwordType').value = '';
     });
   } else {
     // Создаём новый объект (POST)
