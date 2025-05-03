@@ -141,7 +141,13 @@
     document.getElementById('addForm').classList.remove('hidden');
   }
 
-  function addObject() {
+  function clearFormFields() {
+  document.querySelectorAll('#addForm input, #addForm select, #addForm textarea').forEach(el => {
+    el.value = '';
+  });
+}
+
+function addObject() {
   const code = document.getElementById('codeInput').value.trim();
   const now = getFormattedDate();
 
@@ -158,31 +164,24 @@
   };
 
   if (currentObject) {
+    // Редактируем существующий объект
     dataToSend.date_added = currentObject.date_added;
     dataToSend.created_by = currentObject.created_by;
-    // Обновляем существующий объект (PATCH)
-    fetch(API_URL, {
-      method: 'POST',
+
+    fetch(`${API_URL}/code/${code}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data: dataToSend })
     })
     .then(res => res.json())
     .then(() => {
-      alert('Объект добавлен');
-      currentObject = null; // <-- добавлено сюда
+      alert('Объект обновлён');
+      currentObject = null;
       document.getElementById('addForm').classList.add('hidden');
-      // Очистка полей формы (по желанию)
-      document.getElementById('name').value = '';
-      document.getElementById('address').value = '';
-      document.getElementById('devices').value = '';
-      document.getElementById('serials').value = '';
-      document.getElementById('passwordObj').value = '';
-      document.getElementById('graphicalPassword').value = '';
-      document.getElementById('passwordType').value = '';
+      clearFormFields();
     });
   } else {
-    // Создаём новый объект (POST)
-    currentObject = null; // ОБЯЗАТЕЛЬНО
+    // Создаём новый объект
     dataToSend.code = code;
     dataToSend.date_added = now;
     dataToSend.created_by = currentUser.name;
@@ -192,12 +191,15 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data: dataToSend })
     })
+    .then(res => res.json())
     .then(() => {
-  alert('Объект добавлен');
-  currentObject = null;
-  document.getElementById('addForm').classList.add('hidden');
-
-});
+      alert('Объект добавлен');
+      currentObject = null;
+      document.getElementById('addForm').classList.add('hidden');
+      clearFormFields();
+    });
+  }
+}
 
   function deleteObject(code) {
     if (!confirm('Удалить объект?')) return;
